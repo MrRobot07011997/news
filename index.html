@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TNA News</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    .app {
+      background-color: #0a1929;
+      min-height: 100vh;
+      color: white;
+    }
+
+    .content {
+      padding: 20px;
+      padding-top: 40px;
+      padding-bottom: 60px;
+    }
+
+    .featured-heading {
+      font-size: 24px;
+      margin-bottom: 20px;
+    }
+
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background-color: #f8f9fa;
+      display: flex;
+      justify-content: space-around;
+      padding: 10px 0;
+      border-top: 1px solid #e0e0e0;
+    }
+
+    .bottom-nav a {
+      text-decoration: none;
+      color: #333;
+      padding: 5px 10px;
+      text-align: center;
+      font-size: 12px;
+    }
+
+    .bottom-nav a i {
+      font-size: 20px;
+      margin-bottom: 5px;
+    }
+
+    .bottom-nav a.active {
+      color: #007bff;
+      font-weight: bold;
+    }
+
+    .news-items {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-around;
+    }
+
+    .news-item {
+      width: 300px;
+      margin: 20px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .news-item-image img {
+      width: 300px;
+      height: 300px;
+      object-fit: cover;
+    }
+
+    .news-item-content {
+      padding: 15px;
+    }
+
+    .news-item-content h3 {
+      margin-top: 0;
+      margin-bottom: 10px;
+    }
+
+    .news-item-content p {
+      margin-bottom: 10px;
+    }
+
+    .read-more {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    .read-more:hover {
+      background-color: #0056b3;
+    }
+
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      display: none; /* Changed from flex to none */
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .modal-content {
+      background-color: #050c14;
+      color: rgb(255, 255, 255); /* Ensure text is visible on white background */
+      font-style: oblique;
+      padding: 20px;
+      border-radius: 5px;
+      max-width: 90%;
+      max-height: 90%;
+      overflow-y: auto;
+      position: relative;
+    }
+
+    .close-button {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 24px;
+      background: whitesmoke;
+      border: none;
+      cursor: pointer;
+    }
+
+    .modal-content img {
+      width: 300px;
+      height: 300px;
+      object-fit: cover;
+      display: block;
+      margin: 0 auto;
+    }
+
+    .tts-button {
+      background: none;
+      border: none;
+      color: #007bff;
+      font-size: 24px;
+      cursor: pointer;
+      margin-right: 10px;
+    }
+
+    .tts-button:hover {
+      color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="content">
+      <h2 class="featured-heading">TNA NEWS</h2>
+      <div id="loadingMessage">Loading...</div>
+      <div class="news-items" id="newsItems"></div>
+    </div>
+
+    <nav class="bottom-nav">
+      <a href="#" class="active"><i class="fas fa-home"></i><br>Today</a>
+      <a href="#"><i class="fas fa-newspaper"></i><br>News</a>
+      <a href="#"><i class="fas fa-calendar-alt"></i><br>Calendar</a>
+      <a href="#"><i class="fas fa-video"></i><br>Video</a>
+      <a href="#"><i class="fas fa-envelope"></i><br>Contact</a>
+    </nav>
+
+    <div class="modal" id="modal" style="display: none;">
+      <div class="modal-content" id="modalContent">
+        <button class="close-button" id="closeModal">&times;</button>
+        <h1 id="modalTitle"></h1>
+        <img id="modalImage" src="" alt="">
+        <div>
+          <button id="ttsButton" class="tts-button"><i class="fas fa-play"></i></button>
+          <p id="modalStory"></p>
+        </div>
+        <p><small id="modalDate"></small></p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const newsItemsContainer = document.getElementById('newsItems');
+      const loadingMessage = document.getElementById('loadingMessage');
+      const modal = document.getElementById('modal');
+      const modalTitle = document.getElementById('modalTitle');
+      const modalImage = document.getElementById('modalImage');
+      const modalStory = document.getElementById('modalStory');
+      const modalDate = document.getElementById('modalDate');
+      const closeModal = document.getElementById('closeModal');
+      
+      const ttsButton = document.getElementById('ttsButton');
+      let speechSynthesis = window.speechSynthesis;
+      let speechUtterance;
+
+      fetch('https://script.google.com/macros/s/AKfycbyo4-K1FkfSPUog54DtUeErOe1uLS8HZpPFITjmECGcQ-DcgezAZnDakvmcuzOnzg4j/exec')
+        .then(response => response.json())
+        .then(data => {
+          console.log('Fetched data:', data); // Debug: Log the fetched data
+          const newsItems = data.date.slice(1);
+          loadingMessage.style.display = 'none';
+          newsItems.forEach((item, index) => {
+            const newsItem = document.createElement('div');
+            newsItem.classList.add('news-item');
+
+            const imageContainer = document.createElement('div');
+            imageContainer.classList.add('news-item-image');
+            const img = document.createElement('img');
+            img.src = item.image;
+            img.alt = item.header;
+            imageContainer.appendChild(img);
+
+            const contentContainer = document.createElement('div');
+            contentContainer.classList.add('news-item-content');
+            const title = document.createElement('h3');
+            title.textContent = item.header;
+
+            const storyPreview = document.createElement('p');
+            const previewText = item.story ? item.story.slice(0, 100) : "No story available...";
+            storyPreview.textContent = `${previewText}...`;
+
+            const readMoreButton = document.createElement('button');
+            readMoreButton.classList.add('read-more');
+            readMoreButton.textContent = 'Read Full Story';
+            readMoreButton.addEventListener('click', () => {
+              console.log('Opening story:', item); // Debug: Log the item being opened
+              openStoryPage(item);
+            });
+
+            const storyDate = document.createElement('small');
+            storyDate.textContent = new Date(item.date).toLocaleDateString();
+
+            contentContainer.appendChild(title);
+            contentContainer.appendChild(storyPreview);
+            contentContainer.appendChild(readMoreButton);
+            contentContainer.appendChild(storyDate);
+
+            newsItem.appendChild(imageContainer);
+            newsItem.appendChild(contentContainer);
+            newsItemsContainer.appendChild(newsItem);
+          });
+        })
+        .catch(error => {
+          console.error('Error fetching news items:', error);
+          loadingMessage.textContent = 'Error loading news. Please try again later.';
+        });
+
+      const openStoryPage = (item) => {
+        console.log('Opening modal with item:', item); // Debug: Log the item in the modal
+        modalTitle.textContent = item.header || 'No title available';
+        modalImage.src = item.image || '';
+        modalImage.alt = item.header || 'News image';
+        modalImage.style.display = item.image ? 'block' : 'none'; // Hide image if not available
+        modalStory.textContent = item.story || "Full story not available.";
+        modalDate.textContent = item.date ? `Published on: ${new Date(item.date).toLocaleDateString()}` : 'Publication date not available';
+        modal.style.display = 'flex'; // Changed from 'block' to 'flex' for better centering
+
+        // Reset TTS button
+        ttsButton.innerHTML = '<i class="fas fa-play"></i>';
+        if (speechUtterance) {
+          speechSynthesis.cancel();
+        }
+      };
+
+      ttsButton.addEventListener('click', () => {
+        if (speechSynthesis.speaking) {
+          if (speechSynthesis.paused) {
+            speechSynthesis.resume();
+            ttsButton.innerHTML = '<i class="fas fa-pause"></i>';
+          } else {
+            speechSynthesis.pause();
+            ttsButton.innerHTML = '<i class="fas fa-play"></i>';
+          }
+        } else {
+          speechUtterance = new SpeechSynthesisUtterance(modalStory.textContent);
+          speechUtterance.onend = () => {
+            ttsButton.innerHTML = '<i class="fas fa-play"></i>';
+          };
+          speechSynthesis.speak(speechUtterance);
+          ttsButton.innerHTML = '<i class="fas fa-pause"></i>';
+        }
+      });
+
+      closeModal.addEventListener('click', () => {
+        modal.style.display = 'none';
+      });
+
+      // Close modal when clicking outside the content
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          modal.style.display = 'none';
+        }
+      });
+    });
+  </script>
+</body>
+</html>
