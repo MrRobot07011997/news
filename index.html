@@ -20,13 +20,21 @@
 
     .content {
       padding: 20px;
-      padding-top: 40px;
+      padding-top: 20px;
       padding-bottom: 60px;
     }
 
     .featured-heading {
-      font-size: 24px;
-      margin-bottom: 20px;
+      font-size: 36px;
+      text-align: center;
+      margin: 0 0 0px;
+      padding: 10px;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 10px;
+      color: #ffffff;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
 
     .bottom-nav {
@@ -61,27 +69,38 @@
 
     .news-items {
       display: flex;
-      flex-wrap: wrap;
-      justify-content: space-around;
+      flex-direction: column;
+      align-items: center;
     }
 
     .news-item {
-      width: 300px;
-      margin: 20px;
+      width: 100%;
+      max-width: 600px;
+      margin: 20px 0;
       border: 1px solid #ddd;
       border-radius: 8px;
       overflow: hidden;
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: row;
+    }
+
+    .news-item-image {
+      flex: 0 0 150px;
     }
 
     .news-item-image img {
-      width: 300px;
-      height: 300px;
+      width: 150px;
+      height: 150px;
       object-fit: cover;
     }
 
     .news-item-content {
+      flex: 1;
       padding: 15px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
     }
 
     .news-item-content h3 {
@@ -162,13 +181,49 @@
     .tts-button:hover {
       color: #0056b3;
     }
+
+    .loading-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100px;
+    }
+
+    .loading-spinner {
+      width: 50px;
+      height: 50px;
+      border: 5px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: #007bff;
+      animation: spin 1s ease-in-out infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+      margin-left: 15px;
+      font-size: 18px;
+      color: #ffffff;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 0.6; }
+      50% { opacity: 1; }
+      100% { opacity: 0.6; }
+    }
   </style>
 </head>
 <body>
   <div class="app">
     <div class="content">
       <h2 class="featured-heading">TNA NEWS</h2>
-      <div id="loadingMessage">Loading...</div>
+      <div id="loadingMessage" class="loading-container">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Loading...</div>
+      </div>
       <div class="news-items" id="newsItems"></div>
     </div>
 
@@ -258,7 +313,7 @@
         })
         .catch(error => {
           console.error('Error fetching news items:', error);
-          loadingMessage.textContent = 'Error loading news. Please try again later.';
+          loadingMessage.innerHTML = '<div class="loading-text" style="color: #ff6b6b;">Error loading news. Please try again later.</div>';
         });
 
       const openStoryPage = (item) => {
